@@ -150,6 +150,74 @@ describe('level-net - LevelDB over network', () => {
         it('should be able to perform a complete CRUD test', done => {
             doCRUDTest(client, 'CRUD', 'testkey', done);
         });
+        it('should be able to perform batch operations with ' +
+           'strict ordering (1)', done => {
+            client.batch([{ type: 'put', key: 'name', value: 'John Doe' },
+                          { type: 'put', key: 'name', value: 'John Smith' }],
+                         null, err => {
+                             assert.ifError(err);
+                             db.get('name', (err, data) => {
+                                 assert.ifError(err);
+                                 assert.strictEqual(data, 'John Smith');
+                                 done();
+                             });
+                         });
+        });
+        it('should be able to perform batch operations with ' +
+           'strict ordering (2)', done => {
+            client.batch([{ type: 'put', key: 'name', value: 'John Doe' },
+                          { type: 'del', key: 'name' },
+                          { type: 'put', key: 'name', value: 'John Smith' },
+                          { type: 'del', key: 'name' }],
+                         null, err => {
+                             assert.ifError(err);
+                             client.get('name', err => {
+                                 assert(err);
+                                 assert(err.notFound);
+                                 done();
+                             });
+                         });
+        });
+        it('should be able to perform batches of 10000 put and 10000 ' +
+           'delete operations', done => {
+            async.series([
+                subDone => {
+                    const putBatch = [];
+                    for (let i = 0; i < 10000; ++i) {
+                        putBatch.push({ type: 'put',
+                                        key: `batchkey-${i}`,
+                                        value: `batchvalue-${i}` });
+                    }
+                    client.batch(putBatch, null, err => {
+                        assert.ifError(err);
+                        subDone();
+                    });
+                }, subDone => {
+                    // check a random key as a smoke test
+                    client.get('batchkey-7777', (err, data) => {
+                        assert.ifError(err);
+                        assert.strictEqual(data, 'batchvalue-7777');
+                        subDone();
+                    });
+                }, subDone => {
+                    const delBatch = [];
+                    for (let i = 0; i < 10000; ++i) {
+                        delBatch.push({ type: 'del',
+                                        key: `batchkey-${i}` });
+                    }
+                    client.batch(delBatch, null, err => {
+                        assert.ifError(err);
+                        subDone();
+                    });
+                }, subDone => {
+                    client.get('batchkey-7777', err => {
+                        assert(err);
+                        assert(err.notFound);
+                        subDone();
+                    });
+                },
+            ], done);
+        });
     });
     describe('sublevel tests', () => {
         it('should be able to do CRUD on sublevel', done => {
