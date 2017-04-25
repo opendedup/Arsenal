@@ -60,6 +60,10 @@
     "code": 400,
     "description": "Indicates that the versioning configuration specified in the request is invalid."
   },
+  "IllegalReplicationConfigurationException": {
+    "code": 400,
+    "description": "Indicates that the replication configuration specified in the request is invalid."
+  },
   "IncompleteBody": {
     "code": 400,
     "description": "You did not provide the number of bytes specified by the Content-Length HTTP header."
