@@ -105,7 +105,12 @@ describe('record log - persistent log of metadata operations', () => {
             const ops = [{ type: 'put', key: 'foo', value: 'bar',
                            prefix: ['foobucket'] },
                          { type: 'del', key: 'baz',
-                           prefix: ['foobucket'] }];
+                           prefix: ['foobucket'] },
+                         { type: 'put',
+                           key: 'Pâtisserie=中文-español-English',
+                           value: 'yummy',
+                           prefix: ['foobucket'] },
+                        ];
             logProxy.createLogRecordOps(ops, (err, logEntries) => {
                 assert.ifError(err);
                 db.batch(ops.concat(logEntries), err => {
@@ -135,12 +140,23 @@ describe('record log - persistent log of metadata operations', () => {
                                                        ['foobucket']);
                                 assert.strictEqual(typeof record.timestamp,
                                                    'string');
+                            } else if (nbRecords === 2) {
+                                assert.strictEqual(record.seq, 3);
+                                assert.strictEqual(record.type, 'put');
+                                assert.strictEqual(
+                                    record.key,
+                                    'Pâtisserie=中文-español-English');
+                                assert.strictEqual(record.value, 'yummy');
+                                assert.deepStrictEqual(record.prefix,
+                                                       ['foobucket']);
+                                assert.strictEqual(typeof record.timestamp,
+                                                   'string');
                             }
                             nbRecords += 1;
                         });
                         recordStream.on('end', () => {
                             debug('readRecords: stream end');
-                            assert.strictEqual(nbRecords, 2);
+                            assert.strictEqual(nbRecords, 3);
                             done();
                         });
                     });
