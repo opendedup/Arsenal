@@ -227,16 +227,16 @@ describe('record log - persistent log of metadata operations', () => {
             });
         });
 
-        it('should list all entries from a given minSeq', done => {
-            logProxy.readRecords({ minSeq: 500 }, (err, recordStream) => {
+        it('should list all entries from a given startSeq', done => {
+            logProxy.readRecords({ startSeq: 500 }, (err, recordStream) => {
                 assert.ifError(err);
                 checkRecordStream(recordStream,
                                   { startSeq: 500, endSeq: 1000 }, done);
             });
         });
 
-        it('should list all entries up to a given maxSeq', done => {
-            logProxy.readRecords({ maxSeq: 500 }, (err, recordStream) => {
+        it('should list all entries up to a given endSeq', done => {
+            logProxy.readRecords({ endSeq: 500 }, (err, recordStream) => {
                 assert.ifError(err);
                 checkRecordStream(recordStream,
                                   { startSeq: 1, endSeq: 500 }, done);
@@ -245,17 +245,17 @@ describe('record log - persistent log of metadata operations', () => {
 
         it('should list all entries in a seq range', done => {
             logProxy.readRecords(
-                { minSeq: 100, maxSeq: 500 }, (err, recordStream) => {
+                { startSeq: 100, endSeq: 500 }, (err, recordStream) => {
                     assert.ifError(err);
                     checkRecordStream(recordStream,
                                       { startSeq: 100, endSeq: 500 }, done);
                 });
         });
 
-        it('should list all entries from a given minSeq up to a limit',
+        it('should list all entries from a given startSeq up to a limit',
         done => {
             logProxy.readRecords(
-                { minSeq: 100, limit: 100 },
+                { startSeq: 100, limit: 100 },
                 (err, recordStream) => {
                     assert.ifError(err);
                     checkRecordStream(recordStream,

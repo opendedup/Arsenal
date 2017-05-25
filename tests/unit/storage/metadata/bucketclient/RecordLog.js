@@ -63,7 +63,7 @@ const mockedLogResponse = `
     ]
 `;
 
-describe.only('raft record log client', () => {
+describe('raft record log client', () => {
     let server;
     const cliLogger = new Logger('recordLog:test-client',
                                  { level: 'info', dump: 'error' });
@@ -78,7 +78,7 @@ describe.only('raft record log client', () => {
         });
         server.listen(6677);
 
-        openLog({ url: 'http://localhost:6677',
+        openLog({ url: 'http://localhost:6677/mockLog',
                   logger: cliLogger }, (err, logProxy) => {
                       logClient = logProxy;
                       done();
