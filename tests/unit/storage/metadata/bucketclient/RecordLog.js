@@ -8,34 +8,7 @@ const Logger = require('werelogs').Logger;
 const { openLog } = require(
     '../../../../../lib/storage/metadata/bucketclient/RecordLog.js');
 
-function randomName() {
-    let text = '';
-    const possible = ('ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-                      'abcdefghijklmnopqrstuvwxyz0123456789');
-
-    for (let i = 0; i < 5; i++) {
-        text += possible.charAt(Math.floor(Math.random()
-                                           * possible.length));
-    }
-    return text;
-}
-
-function createScratchRecordLog(logClient, done) {
-    const name = randomName();
-    debug(`creating scratch log ${name}`);
-    logClient.openLog(name, (err, proxy) => {
-        assert.ifError(err);
-        assert(proxy);
-        done(null, proxy);
-    });
-}
-
-function closeRecordLog(openLog, done) {
-    debug(`closing scratch log ${openLog.name}`);
-    openLog.on('disconnect', done);
-    openLog.disconnect();
-}
-
+/* eslint-disable max-len */
 const mockedLogResponse = `
     [
         {
@@ -62,12 +35,12 @@ const mockedLogResponse = `
         }
     ]
 `;
+/* eslint-enable max-len */
 
 describe('raft record log client', () => {
     let server;
     const cliLogger = new Logger('recordLog:test-client',
                                  { level: 'info', dump: 'error' });
-    let db;
     let logClient;
 
     function setup(done) {
@@ -78,11 +51,11 @@ describe('raft record log client', () => {
         });
         server.listen(6677);
 
-        openLog({ url: 'http://localhost:6677/mockLog',
-                  logger: cliLogger }, (err, logProxy) => {
-                      logClient = logProxy;
-                      done();
-                  });
+        openLog({ url: 'http://localhost:6677/mockLog', logger: cliLogger },
+                (err, logProxy) => {
+                    logClient = logProxy;
+                    done();
+                });
     }
 
     before(done => {

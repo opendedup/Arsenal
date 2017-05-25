@@ -30,7 +30,7 @@ function createScratchRecordLog(logger, done) {
     openLog({
         url: 'http://localhost:6677/test/recordLog',
         logger,
-        logName: name
+        logName: name,
     }, (err, proxy) => {
         assert.ifError(err);
         assert(proxy);
