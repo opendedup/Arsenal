@@ -39,7 +39,7 @@ function closeRecordLog(openLog, done) {
 const mockedLogResponse = `
     [
         {
-            "db": "main",
+            "db": "funbucket",
             "entries": [
                 {
                     "key": "coolkey",
@@ -50,7 +50,7 @@ const mockedLogResponse = `
             "timestamp": "2017-05-24T23:54:59.853Z"
         },
         {
-            "db": "main",
+            "db": "funbucket",
             "entries": [
                 {
                     "key": "coolkey",
@@ -96,12 +96,28 @@ describe.only('raft record log client', () => {
 
     describe('readRecords', () => {
         it('should list all records in a log', done => {
-            const recordStream = logClient.readRecords({});
+            const recordStream = logClient.readRecords();
+            let nbRecords = 0;
             recordStream.on('data', data => {
-                console.log('record log listing: received record:', data);
+                assert.strictEqual(data.db, 'funbucket');
+                assert.strictEqual(data.entries.length, 1);
+                const entry = data.entries[0];
+                if (nbRecords === 0) {
+                    assert.strictEqual(data.seq, 5);
+                    assert.strictEqual(entry.type, 'put');
+                    assert.strictEqual(entry.key, 'coolkey');
+                    assert(entry.value.length > 0);
+                } else {
+                    assert.strictEqual(nbRecords, 1);
+                    assert.strictEqual(data.seq, 6);
+                    assert.strictEqual(entry.type, 'del');
+                    assert.strictEqual(entry.key, 'coolkey');
+                    assert.strictEqual(entry.value, undefined);
+                }
+                nbRecords += 1;
             });
             recordStream.on('end', () => {
-                console.log('end of log record listing');
+                assert.strictEqual(nbRecords, 2);
                 done();
             });
         });
