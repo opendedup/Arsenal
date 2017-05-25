@@ -9,7 +9,7 @@ const sublevel = require('level-sublevel');
 const Logger = require('werelogs').Logger;
 
 const rpc = require('../../../../../lib/network/rpc/rpc');
-const { RecordLogClient, RecordLogService } =
+const { openLog, RecordLogService } =
           require('../../../../../lib/storage/metadata/file/RecordLog.js');
 
 function randomName() {
@@ -24,20 +24,24 @@ function randomName() {
     return text;
 }
 
-function createScratchRecordLog(logClient, done) {
+function createScratchRecordLog(logger, done) {
     const name = randomName();
     debug(`creating scratch log ${name}`);
-    logClient.openLog(name, (err, proxy) => {
+    openLog({
+        url: 'http://localhost:6677/test/recordLog',
+        logger,
+        logName: name
+    }, (err, proxy) => {
         assert.ifError(err);
         assert(proxy);
         done(null, proxy);
     });
 }
 
-function closeRecordLog(openLog, done) {
-    debug(`closing scratch log ${openLog.name}`);
-    openLog.on('disconnect', done);
-    openLog.disconnect();
+function closeRecordLog(logProxy, done) {
+    debug(`closing scratch log ${logProxy.name}`);
+    logProxy.on('disconnect', done);
+    logProxy.disconnect();
 }
 
 describe('record log - persistent log of metadata operations', () => {
@@ -47,7 +51,6 @@ describe('record log - persistent log of metadata operations', () => {
     const cliLogger = new Logger('recordLog:test-client',
                                  { level: 'info', dump: 'error' });
     let db;
-    let logClient;
 
     function setup(done) {
         server = new rpc.RPCServer({ logger: srvLogger });
@@ -58,10 +61,6 @@ describe('record log - persistent log of metadata operations', () => {
             namespace: '/test/recordLog',
             logger: srvLogger,
             rootDb: db,
-        });
-        logClient = new RecordLogClient({
-            url: 'http://localhost:6677/test/recordLog',
-            logger: cliLogger,
         });
         done();
     }
@@ -84,7 +83,7 @@ describe('record log - persistent log of metadata operations', () => {
         let logProxy;
 
         beforeEach(done => {
-            createScratchRecordLog(logClient, (err, proxy) => {
+            createScratchRecordLog(cliLogger, (err, proxy) => {
                 logProxy = proxy;
                 done();
             });
@@ -124,33 +123,39 @@ describe('record log - persistent log of metadata operations', () => {
                             debug('readRecords: next record:', record);
                             if (nbRecords === 0) {
                                 assert.strictEqual(record.seq, 1);
-                                assert.strictEqual(record.type, 'put');
-                                assert.strictEqual(record.key, 'foo');
-                                assert.strictEqual(record.value, 'bar');
-                                assert.deepStrictEqual(record.prefix,
-                                                       ['foobucket']);
+                                assert.deepStrictEqual(record.db,
+                                                       'foobucket');
                                 assert.strictEqual(typeof record.timestamp,
                                                    'string');
+                                assert.strictEqual(record.entries.length, 1);
+                                const entry = record.entries[0];
+                                assert.strictEqual(entry.type, 'put');
+                                assert.strictEqual(entry.key, 'foo');
+                                assert.strictEqual(entry.value, 'bar');
                             } else if (nbRecords === 1) {
                                 assert.strictEqual(record.seq, 2);
-                                assert.strictEqual(record.type, 'del');
-                                assert.strictEqual(record.key, 'baz');
-                                assert.strictEqual(record.value, undefined);
-                                assert.deepStrictEqual(record.prefix,
-                                                       ['foobucket']);
+                                assert.deepStrictEqual(record.db,
+                                                       'foobucket');
                                 assert.strictEqual(typeof record.timestamp,
                                                    'string');
+                                assert.strictEqual(record.entries.length, 1);
+                                const entry = record.entries[0];
+                                assert.strictEqual(entry.type, 'del');
+                                assert.strictEqual(entry.key, 'baz');
+                                assert.strictEqual(entry.value, undefined);
                             } else if (nbRecords === 2) {
                                 assert.strictEqual(record.seq, 3);
-                                assert.strictEqual(record.type, 'put');
-                                assert.strictEqual(
-                                    record.key,
-                                    'Pâtisserie=中文-español-English');
-                                assert.strictEqual(record.value, 'yummy');
-                                assert.deepStrictEqual(record.prefix,
-                                                       ['foobucket']);
+                                assert.deepStrictEqual(record.db,
+                                                       'foobucket');
                                 assert.strictEqual(typeof record.timestamp,
                                                    'string');
+                                assert.strictEqual(record.entries.length, 1);
+                                const entry = record.entries[0];
+                                assert.strictEqual(entry.type, 'put');
+                                assert.strictEqual(
+                                    entry.key,
+                                    'Pâtisserie=中文-español-English');
+                                assert.strictEqual(entry.value, 'yummy');
                             }
                             nbRecords += 1;
                         });
@@ -169,7 +174,7 @@ describe('record log - persistent log of metadata operations', () => {
         let logProxy;
 
         before(done => {
-            createScratchRecordLog(logClient, (err, proxy) => {
+            createScratchRecordLog(cliLogger, (err, proxy) => {
                 logProxy = proxy;
                 // fill the log with 1000 entries
                 debug('going to append records');
@@ -191,11 +196,13 @@ describe('record log - persistent log of metadata operations', () => {
 
         function checkRecord(record, seq) {
             assert.strictEqual(record.seq, seq);
-            assert.strictEqual(record.type, 'put');
-            assert.strictEqual(record.key, `foo${seq}`);
-            assert.strictEqual(record.value, `bar${seq}`);
-            assert.deepStrictEqual(record.prefix, ['foobucket']);
+            assert.strictEqual(record.entries.length, 1);
+            assert.deepStrictEqual(record.db, 'foobucket');
             assert.strictEqual(typeof record.timestamp, 'string');
+            const entry = record.entries[0];
+            assert.strictEqual(entry.type, 'put');
+            assert.strictEqual(entry.key, `foo${seq}`);
+            assert.strictEqual(entry.value, `bar${seq}`);
         }
         function checkRecordStream(recordStream, params, done) {
             assert(recordStream);
