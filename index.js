@@ -55,6 +55,8 @@ module.exports = {
             require('./lib/storage/metadata/file/MetadataFileServer'),
             MetadataFileClient:
             require('./lib/storage/metadata/file/MetadataFileClient'),
+            raftAdmin:
+            require('./lib/storage/metadata/bucketclient/raftAdmin'),
         },
         data: {
             file: {
