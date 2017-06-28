@@ -2,8 +2,8 @@
 
 const assert = require('assert');
 
-const RaftClient = require(
-    '../../../../../lib/storage/metadata/bucketclient/RaftClient.js');
+const LogConsumer = require(
+    '../../../../../lib/storage/metadata/bucketclient/LogConsumer.js');
 
 /* eslint-disable max-len */
 const mockedLogResponse = `{
@@ -56,7 +56,7 @@ describe('raft record log client', () => {
 
     function setup(done) {
         const bucketClient = new BucketClientMock();
-        logClient = new RaftClient({ bucketClient });
+        logClient = new LogConsumer({ bucketClient });
         logProxy = logClient.openRecordLog(0);
         done();
     }
