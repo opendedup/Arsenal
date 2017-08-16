@@ -151,4 +151,10 @@ describe('ObjectMD import from stored blob', () => {
                            constants.mdModelVersion);
         assert.notStrictEqual(valueImported.dataStoreName, undefined);
     });
+
+    it('should return an error if blob is malformed JSON', () => {
+        const importedRes = ObjectMD.createFromBlob('{BAD JSON}');
+        assert.notStrictEqual(importedRes.error, undefined);
+        assert.strictEqual(importedRes.result, undefined);
+    });
 });
