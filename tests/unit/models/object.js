@@ -147,6 +147,8 @@ describe('ObjectMD import from stored blob', () => {
         const importedMd = importedRes.result;
         const valueImported = importedMd.getValue();
         assert.deepStrictEqual(valueImported.location, null);
+        importedMd.setLocation([]);
+        assert.deepStrictEqual(importedMd.getValue().location, null);
     });
 
     it('should add dataStoreName attribute if missing', () => {
