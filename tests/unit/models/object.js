@@ -137,6 +137,18 @@ describe('ObjectMD import from stored blob', () => {
                                [{ key: 'stringLocation' }]);
     });
 
+    it('should keep null location as is', () => {
+        const md = new ObjectMD();
+        const value = md.getValue();
+        value.location = null;
+        const jsonMd = JSON.stringify(value);
+        const importedRes = ObjectMD.createFromBlob(jsonMd);
+        assert.strictEqual(importedRes.error, undefined);
+        const importedMd = importedRes.result;
+        const valueImported = importedMd.getValue();
+        assert.deepStrictEqual(valueImported.location, null);
+    });
+
     it('should add dataStoreName attribute if missing', () => {
         const md = new ObjectMD();
         const value = md.getValue();
