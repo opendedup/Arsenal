@@ -97,6 +97,7 @@ module.exports = {
         BucketInfo: require('./lib/models/BucketInfo'),
         ObjectMD: require('./lib/models/ObjectMD'),
         ARN: require('./lib/models/ARN'),
+        ObjectMDLocation: require('./lib/models/ObjectMDLocation'),
         WebsiteConfiguration: require('./lib/models/WebsiteConfiguration'),
         ReplicationConfiguration:
           require('./lib/models/ReplicationConfiguration'),
