@@ -23,8 +23,8 @@
     "ipaddr.js": "1.2.0",
     "level": "~2.0.0",
     "level-sublevel": "~6.6.1",
-    "socket.io": "~2.0.4",
-    "socket.io-client": "~2.0.4",
+    "socket.io": "2.0.4",
+    "socket.io-client": "2.0.4",
     "utf8": "2.1.2",
     "uuid": "~3.0.1",
     "werelogs": "scality/werelogs#rel/7.0"
